@@ -4,9 +4,11 @@
 		[root@localhost sysconfig]# > watchlog  
 		[root@localhost sysconfig]# vi watchlog  
 		[root@localhost sysconfig]# cat watchlog  
-	```# File and word that we will be monit  
+	```
+	# File and word that we will be monit  
 	WORD="ALERT"  
-	LOG=/var/log/watchlog.log```  
+	LOG=/var/log/watchlog.log  
+	```  
 	
 	`# File and word that we will be monit`  
 	`WORD="ALERT"`  
