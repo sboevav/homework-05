@@ -52,6 +52,14 @@
 		[root@localhost sysconfig]# cat /etc/systemd/system/watchlog.service  
 	```
 	[Unit]
+	Description=MyTimer
+
+	[Service]
+	Type=simple
+	ExecStart=/opt/watchlog.sh $WORD $LOG
+
+
+	[Unit]
 	Description=My watchlog service
 
 	[Service]
@@ -62,9 +70,21 @@
 6. Создадим юнит /etc/systemd/system/watchlog.timer для таймера watchlog  
 		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
-		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# cat /etc/systemd/system/watchlog.timer  
 	```
+	[Unit]
+	Description=Runs my-timer every minute
+
+	[Timer]
+	# Run after booting one minute
+	OnBootSec=1min
+	# Run every one munite
+	OnUnitActiveSec=1min
+	Unit=watchlog.service
+
+	[Install]
+	WantedBy=multi-user.target
+
 	[Unit]
 	Description=Run watchlog script every 30 second
 
