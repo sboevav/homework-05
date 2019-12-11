@@ -43,3 +43,18 @@
 	fi
 	```
 
+4. Создадим юнит /etc/systemd/system/watchlog.service для сервиса watchlog  
+		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.service  
+		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.service  
+		[root@localhost sysconfig]# cat /etc/systemd/system/watchlog.service  
+	```
+	[Unit]
+	Description=My watchlog service
+
+	[Service]
+	Type=oneshot
+	EnvironmentFile=/etc/sysconfig/watchdog
+	ExecStart=/opt/watchlog.sh $WORD $LOG
+	```
+
+
