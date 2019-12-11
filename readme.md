@@ -43,7 +43,10 @@
 	fi
 	```
 
-4. Создадим юнит /etc/systemd/system/watchlog.service для сервиса watchlog  
+4. Делаем скрипт исполняемым  
+		[root@localhost opt]# chmod +x watchlog.sh  
+
+5. Создадим юнит /etc/systemd/system/watchlog.service для сервиса watchlog  
 		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.service  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.service  
 		[root@localhost sysconfig]# cat /etc/systemd/system/watchlog.service  
@@ -56,7 +59,7 @@
 	EnvironmentFile=/etc/sysconfig/watchlog
 	ExecStart=/opt/watchlog.sh $WORD $LOG
 	```
-5. Создадим юнит /etc/systemd/system/watchlog.timer для таймера watchlog  
+6. Создадим юнит /etc/systemd/system/watchlog.timer для таймера watchlog  
 		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
