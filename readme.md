@@ -25,9 +25,9 @@
 	```
 
 3. Создаем файл скрипта /opt/watchlog.sh, который будет искать заданное слово  
-		[root@localhost sysconfig]# > /opt/watchlog.sh
-		[root@localhost sysconfig]# vi /opt/watchlog.sh
-		[root@localhost sysconfig]# cat /opt/watchlog.sh
+		[root@localhost sysconfig]# > /opt/watchlog.sh  
+		[root@localhost sysconfig]# vi /opt/watchlog.sh  
+		[root@localhost sysconfig]# cat /opt/watchlog.sh  
 	```
 	#!/bin/bash
 
@@ -53,11 +53,11 @@
 
 	[Service]
 	Type=oneshot
-	EnvironmentFile=/etc/sysconfig/watchdog
+	EnvironmentFile=/etc/sysconfig/watchlog
 	ExecStart=/opt/watchlog.sh $WORD $LOG
 	```
 5. Создадим юнит /etc/systemd/system/watchlog.timer для таймера watchlog  
-		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.timer
+		[root@localhost sysconfig]# > /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# vi /etc/systemd/system/watchlog.timer  
 		[root@localhost sysconfig]# cat /etc/systemd/system/watchlog.timer  
@@ -73,4 +73,5 @@
 	[Install]
 	WantedBy=multi-user.target
 	```
+
 
