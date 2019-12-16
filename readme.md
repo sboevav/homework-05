@@ -216,12 +216,12 @@
 # Реализуем возможность запуска нескольких инстансов сервера с разными конфигами 
 http://automation-remarks.com/setting-vagrant/
 
-1. Копируем юнит-файл /usr/lib/systemd/system/httpd.service в каталог /etc/systemd/system/  
-		[root@localhost vagrant]# cp /usr/lib/systemd/system/httpd.service /etc/systemd/system/  
+1. Копируем юнит-файл /usr/lib/systemd/system/httpd.service в каталог /etc/systemd/system/ c изменением имени на httpd@.service  
+		[root@localhost vagrant]# cp /usr/lib/systemd/system/httpd.service /etc/systemd/system/httpd@.service  
 
-2. Изменяем в юнит-файле значение параметра EnvironmentFile с /etc/sysconfig/httpd-%I на /etc/sysconfig/httpd-%l  
-		[root@localhost vagrant]# vi /etc/systemd/system/httpd.service  
-		[root@localhost vagrant]# cat /etc/systemd/system/httpd.service  
+2. Изменяем в юнит-файле значение параметра EnvironmentFile с /etc/sysconfig/httpd на /etc/sysconfig/httpd-%I  
+		[root@localhost vagrant]# vi /etc/systemd/system/httpd@.service  
+		[root@localhost vagrant]# cat /etc/systemd/system/httpd@.service  
 	```
 	[Unit]
 	Description=The Apache HTTP Server
@@ -231,7 +231,7 @@ http://automation-remarks.com/setting-vagrant/
 
 	[Service]
 	Type=notify
-	EnvironmentFile=/etc/sysconfig/httpd-%l
+	EnvironmentFile=/etc/sysconfig/httpd-%I
 	ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND
 	ExecReload=/usr/sbin/httpd $OPTIONS -k graceful
 	ExecStop=/bin/kill -WINCH ${MAINPID}
@@ -299,5 +299,18 @@ http://automation-remarks.com/setting-vagrant/
 	#Listen 12.34.56.78:80
 	Listen 8080
 	...
+	```
+7. Делаем релоад systemd  
+		[root@localhost vagrant]# systemctl daemon-reload  
+
+8. Запустим два инстанса  
+		systemctl start httpd@first  
+		systemctl start httpd@second  
+
+9. Проверим прослушиваемые порты  
+		ss -tnulp | grep httpd  
+	```
+	tcp    LISTEN     0      511       *:8080                  *:*                   users:(("httpd",pid=4222,fd=3),("httpd",pid=4221,fd=3),("httpd",pid=4220,fd=3),("httpd",pid=4219,fd=3),("httpd",pid=4218,fd=3),("httpd",pid=4217,fd=3),("httpd",pid=4216,fd=3))
+	tcp    LISTEN     0      511       *:80                    *:*                   users:(("httpd",pid=4182,fd=3),("httpd",pid=4181,fd=3),("httpd",pid=4180,fd=3),("httpd",pid=4179,fd=3),("httpd",pid=4178,fd=3),("httpd",pid=4177,fd=3),("httpd",pid=4176,fd=3))
 	```
 
