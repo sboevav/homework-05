@@ -107,7 +107,7 @@
 	Dec 16 10:14:01 localhost systemd: Started My watchlog service.
 	```
 
-# Изменение init-скрипта на unit-файл
+# Изменение init-скрипта Spawn-fcgi на unit-файл
 
 1. Устанавливаем spawn-fcgi и необходимые для него пакеты  
 		[root@localhost vagrant]# yum install epel-release -y && yum install spawn-fcgi php php-cli mod_fcgid httpd -y  
@@ -133,7 +133,6 @@
 
 	Complete!
 	```
-
 2. Исправим переменные в конфигурационном файле /etc/sysconfig/spawn-fcgi  
 		[root@localhost vagrant]# vi /etc/sysconfig/spawn-fcgi  
 		[root@localhost vagrant]# cat /etc/sysconfig/spawn-fcgi  
@@ -148,7 +147,6 @@
 	OPTIONS="-u apache -g apache -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
 	#OPTIONS="-u apache -g apache -s $SOCKET -S -M 0600 -C 32 -F 1 -P /var/run/spawn-fcgi.pid -- /usr/bin/php-cgi"
 	```
-
 3. Создадим unt-файл /etc/systemd/system/spawn-fcgi.service  
 		[root@localhost bin]# > /etc/systemd/system/spawn-fcgi.service  
 		[root@localhost bin]# vi /etc/systemd/system/spawn-fcgi.service  
@@ -168,7 +166,6 @@
 	[Install]
 	WantedBy=multi-user.target
 	```
-
 4. Убеждаемся что все успешно работает   
 		[root@localhost bin]# systemctl start spawn-fcgi  
 		[root@localhost bin]# systemctl status spawn-fcgi  
@@ -215,5 +212,7 @@
 	дек 16 10:47:38 localhost.localdomain systemd[1]: Started Spawn-fcgi star...
 	Hint: Some lines were ellipsized, use -l to show in full.
 	```
+
+# Реализуем возможность запуска нескольких инстансов сервера apache httpd с разными конфигами 
 
 
