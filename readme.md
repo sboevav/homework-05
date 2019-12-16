@@ -166,7 +166,7 @@
 	[Install]
 	WantedBy=multi-user.target
 	```
-4. Убеждаемся что все успешно работает   
+4. Запускаем и убеждаемся что все успешно работает   
 		[root@localhost bin]# systemctl start spawn-fcgi  
 		[root@localhost bin]# systemctl status spawn-fcgi  
 	```
@@ -215,5 +215,57 @@
 
 # Реализуем возможность запуска нескольких инстансов сервера с разными конфигами 
 http://automation-remarks.com/setting-vagrant/
+
+1. Копируем юнит-файл /usr/lib/systemd/system/httpd.service в каталог /etc/systemd/system/  
+		[root@localhost vagrant]# cp /usr/lib/systemd/system/httpd.service /etc/systemd/system/  
+
+2. Изменяем в юнит-файле значение параметра EnvironmentFile с /etc/sysconfig/httpd-%I на /etc/sysconfig/httpd-%l  
+		[root@localhost vagrant]# vi /etc/systemd/system/httpd.service  
+		[root@localhost vagrant]# cat /etc/systemd/system/httpd.service  
+	```
+	[Unit]
+	Description=The Apache HTTP Server
+	After=network.target remote-fs.target nss-lookup.target
+	Documentation=man:httpd(8)
+	Documentation=man:apachectl(8)
+
+	[Service]
+	Type=notify
+	EnvironmentFile=/etc/sysconfig/httpd-%l
+	ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND
+	ExecReload=/usr/sbin/httpd $OPTIONS -k graceful
+	ExecStop=/bin/kill -WINCH ${MAINPID}
+	# We want systemd to give httpd some time to finish gracefully, but still want
+	# it to kill httpd after TimeoutStopSec if something went wrong during the
+	# graceful stop. Normally, Systemd sends SIGTERM signal right after the
+	# ExecStop, which would kill httpd. We are sending useless SIGCONT here to give
+	# httpd time to finish.
+	KillSignal=SIGCONT
+	PrivateTmp=true
+
+	[Install]
+	WantedBy=multi-user.target
+	```
+3. Создаем первый файл окружения /etc/sysconfig/httpd-first, в котором указываем первый файл конфигурации сервера  
+		[root@localhost vagrant]# > /etc/sysconfig/httpd-first  
+		[root@localhost vagrant]# vi /etc/sysconfig/httpd-first  
+		[root@localhost vagrant]# cat /etc/sysconfig/httpd-first  
+	```
+	# /etc/sysconfig/httpd-first
+	OPTIONS=-f conf/first.conf
+	```
+4. Создаем второй файл окружения /etc/sysconfig/httpd-second, в котором указываем второй файл конфигурации сервера  
+		[root@localhost vagrant]# > /etc/sysconfig/httpd-second  
+		[root@localhost vagrant]# vi /etc/sysconfig/httpd-second  
+		[root@localhost vagrant]# cat /etc/sysconfig/httpd-second  
+	```
+	# /etc/sysconfig/httpd-second
+	OPTIONS=-f conf/second.conf
+	```
+5. Создадим две новых копии текущего конфигурационного файла httpd.conf - first.conf и second.conf и проверим их наличие  
+		[root@localhost vagrant]# cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/first.conf  
+		[root@localhost vagrant]# cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/second.conf  
+		[root@localhost vagrant]# ls /etc/httpd/conf/  
+	first.conf  httpd.conf  magic  second.conf
 
 
