@@ -107,7 +107,31 @@
 	Dec 16 10:14:01 localhost systemd: Started My watchlog service.
 	```
 
-# Создание сервиса мониторинга лога
+# Изменение init-скрипта на unit-файл
 
+1. Устанавливаем spawn-fcgi и необходимые для него пакеты  
+		[root@localhost vagrant]# yum install epel-release -y && yum install spawn-fcgi php php-cli mod_fcgid httpd -y  
+	```
+	...
+	Installed:
+	  epel-release.noarch 0:7-11                                                   
+
+	Complete!
+	...
+	Installed:
+	  httpd.x86_64 0:2.4.6-90.el7.centos     mod_fcgid.x86_64 0:2.3.9-6.el7        
+	  php.x86_64 0:5.4.16-46.1.el7_7         php-cli.x86_64 0:5.4.16-46.1.el7_7    
+	  spawn-fcgi.x86_64 0:1.6.3-5.el7       
+
+	Dependency Installed:
+	  apr.x86_64 0:1.4.8-5.el7                                                     
+	  apr-util.x86_64 0:1.5.2-6.el7                                                
+	  httpd-tools.x86_64 0:2.4.6-90.el7.centos                                     
+	  libzip.x86_64 0:0.10.1-8.el7                                                 
+	  mailcap.noarch 0:2.1.41-2.el7                                                
+	  php-common.x86_64 0:5.4.16-46.1.el7_7                                        
+
+	Complete!
+	```
 
 
