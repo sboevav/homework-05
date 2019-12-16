@@ -307,7 +307,55 @@ http://automation-remarks.com/setting-vagrant/
 		systemctl start httpd@first  
 		systemctl start httpd@second  
 
-9. Проверим прослушиваемые порты  
+9. Проверим запуск первого экземпляра  
+		[root@localhost vagrant]# systemctl status httpd@first  
+	```
+	● httpd@first.service - The Apache HTTP Server
+	   Loaded: loaded (/etc/systemd/system/httpd@.service; disabled; vendor preset: disabled)
+	   Active: active (running) since Пн 2019-12-16 18:46:28 UTC; 35s ago
+	     Docs: man:httpd(8)
+		   man:apachectl(8)
+	 Main PID: 4176 (httpd)
+	   Status: "Total requests: 0; Current requests/sec: 0; Current traffic:   0 B/sec"
+	   CGroup: /system.slice/system-httpd.slice/httpd@first.service
+		   ├─4176 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   ├─4177 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   ├─4178 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   ├─4179 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   ├─4180 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   ├─4181 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+		   └─4182 /usr/sbin/httpd -f conf/first.conf -DFOREGROUND
+
+	дек 16 18:46:28 localhost.localdomain systemd[1]: Starting The Apache HTTP...
+	дек 16 18:46:28 localhost.localdomain httpd[4176]: AH00558: httpd: Could n...
+	дек 16 18:46:28 localhost.localdomain systemd[1]: Started The Apache HTTP ...
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+10. Проверим запуск второго экземпляра  
+		[root@localhost vagrant]# systemctl status httpd@second  
+	```
+	● httpd@second.service - The Apache HTTP Server
+	   Loaded: loaded (/etc/systemd/system/httpd@.service; disabled; vendor preset: disabled)
+	   Active: active (running) since Пн 2019-12-16 18:47:53 UTC; 12s ago
+	     Docs: man:httpd(8)
+		   man:apachectl(8)
+	 Main PID: 4216 (httpd)
+	   Status: "Total requests: 0; Current requests/sec: 0; Current traffic:   0 B/sec"
+	   CGroup: /system.slice/system-httpd.slice/httpd@second.service
+		   ├─4216 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   ├─4217 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   ├─4218 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   ├─4219 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   ├─4220 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   ├─4221 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+		   └─4222 /usr/sbin/httpd -f conf/second.conf -DFOREGROUND
+
+	дек 16 18:47:53 localhost.localdomain systemd[1]: Starting The Apache HTTP...
+	дек 16 18:47:53 localhost.localdomain httpd[4216]: AH00558: httpd: Could n...
+	дек 16 18:47:53 localhost.localdomain systemd[1]: Started The Apache HTTP ...
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+11. Проверим прослушиваемые порты  
 		ss -tnulp | grep httpd  
 	```
 	tcp    LISTEN     0      511       *:8080                  *:*                   users:(("httpd",pid=4222,fd=3),("httpd",pid=4221,fd=3),("httpd",pid=4220,fd=3),("httpd",pid=4219,fd=3),("httpd",pid=4218,fd=3),("httpd",pid=4217,fd=3),("httpd",pid=4216,fd=3))
