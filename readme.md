@@ -86,7 +86,28 @@
 9. Запустим сервис watchlog  
 		[root@localhost vagrant]# systemctl start watchlog  
 
+10. Убедимся в периодическом запуске сервиса и поиске слова в логе  
+		[root@localhost vagrant]# tail -f -n 10 /var/log/messages  
+	```
+	Dec 16 10:13:36 localhost systemd: Started My watchlog service.
+	Dec 16 10:13:41 localhost systemd: Starting My watchlog service...
+	Dec 16 10:13:41 localhost root: Mon Dec 16 10:13:41 UTC 2019: I found the word ALERT in the log /var/log/watchlog.log, Master!
+	Dec 16 10:13:41 localhost systemd: Started My watchlog service.
+	Dec 16 10:13:46 localhost systemd: Starting My watchlog service...
+	Dec 16 10:13:46 localhost root: Mon Dec 16 10:13:46 UTC 2019: I found the word ALERT in the log /var/log/watchlog.log, Master!
+	Dec 16 10:13:46 localhost systemd: Started My watchlog service.
+	Dec 16 10:13:51 localhost systemd: Starting My watchlog service...
+	Dec 16 10:13:51 localhost root: Mon Dec 16 10:13:51 UTC 2019: I found the word ALERT in the log /var/log/watchlog.log, Master!
+	Dec 16 10:13:51 localhost systemd: Started My watchlog service.
+	Dec 16 10:13:56 localhost systemd: Starting My watchlog service...
+	Dec 16 10:13:56 localhost root: Mon Dec 16 10:13:56 UTC 2019: I found the word ALERT in the log /var/log/watchlog.log, Master!
+	Dec 16 10:13:56 localhost systemd: Started My watchlog service.
+	Dec 16 10:14:01 localhost systemd: Starting My watchlog service...
+	Dec 16 10:14:01 localhost root: Mon Dec 16 10:14:01 UTC 2019: I found the word ALERT in the log /var/log/watchlog.log, Master!
+	Dec 16 10:14:01 localhost systemd: Started My watchlog service.
+	```
 
+# Создание сервиса мониторинга лога
 
 
 
