@@ -266,6 +266,38 @@ http://automation-remarks.com/setting-vagrant/
 		[root@localhost vagrant]# cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/first.conf  
 		[root@localhost vagrant]# cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/second.conf  
 		[root@localhost vagrant]# ls /etc/httpd/conf/  
+	```
 	first.conf  httpd.conf  magic  second.conf
+	```
 
+6. Исправим второй конфигурационный файл. Поменяем значения PidFile и Listen  
+		[root@localhost vagrant]# vi /etc/httpd/conf/second.conf  
+		[root@localhost vagrant]# cat /etc/httpd/conf/second.conf  
+	```
+	...
+	#
+	# ServerRoot: The top of the directory tree under which the server's
+	# configuration, error, and log files are kept.
+	#
+	# Do not add a slash at the end of the directory path.  If you point
+	# ServerRoot at a non-local disk, be sure to specify a local disk on the
+	# Mutex directive, if file-based mutexes are used.  If you wish to share the
+	# same ServerRoot for multiple httpd daemons, you will need to change at
+	# least PidFile.
+	#
+	ServerRoot "/etc/httpd"
+	PidFile /var/run/httpd-second.pid
+
+	#
+	# Listen: Allows you to bind Apache to specific IP addresses and/or
+	# ports, instead of the default. See also the <VirtualHost>
+	# directive.
+	#
+	# Change this to Listen on specific IP addresses as shown below to 
+	# prevent Apache from glomming onto all bound IP addresses.
+	#
+	#Listen 12.34.56.78:80
+	Listen 8080
+	...
+	```
 
