@@ -213,6 +213,7 @@
 	Hint: Some lines were ellipsized, use -l to show in full.
 	```
 
-# Реализуем возможность запуска нескольких инстансов сервера apache httpd с разными конфигами 
+# Реализуем возможность запуска нескольких инстансов сервера с разными конфигами 
+http://automation-remarks.com/setting-vagrant/
 
 
