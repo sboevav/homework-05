@@ -134,4 +134,86 @@
 	Complete!
 	```
 
+2. Исправим переменные в конфигурационном файле /etc/sysconfig/spawn-fcgi  
+		[root@localhost vagrant]# vi /etc/sysconfig/spawn-fcgi  
+		[root@localhost vagrant]# cat /etc/sysconfig/spawn-fcgi  
+	```
+	# You must set some working options before the "spawn-fcgi" service will work.
+	# If SOCKET points to a file, then this file is cleaned up by the init script.
+	#
+	# See spawn-fcgi(1) for all possible options.
+	#
+	# Example :
+	SOCKET=/var/run/php-fcgi.sock
+	OPTIONS="-u apache -g apache -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
+	#OPTIONS="-u apache -g apache -s $SOCKET -S -M 0600 -C 32 -F 1 -P /var/run/spawn-fcgi.pid -- /usr/bin/php-cgi"
+	```
+
+3. Создадим unt-файл /etc/systemd/system/spawn-fcgi.service  
+		[root@localhost bin]# > /etc/systemd/system/spawn-fcgi.service  
+		[root@localhost bin]# vi /etc/systemd/system/spawn-fcgi.service  
+		[root@localhost bin]# cat /etc/systemd/system/spawn-fcgi.service  
+	```
+	[Unit]
+	Description=Spawn-fcgi startup service by Otus
+	After=network.target
+
+	[Service]
+	Type=simple
+	PIDFile=/var/run/spawn-fcgi.pid
+	EnvironmentFile=/etc/sysconfig/spawn-fcgi
+	ExecStart=/usr/bin/spawn-fcgi -n $OPTIONS
+	KillMode=process
+
+	[Install]
+	WantedBy=multi-user.target
+	```
+
+4. Убеждаемся что все успешно работает   
+		[root@localhost bin]# systemctl start spawn-fcgi  
+		[root@localhost bin]# systemctl status spawn-fcgi  
+	```
+	● spawn-fcgi.service - Spawn-fcgi startup service by Otus
+	   Loaded: loaded (/etc/systemd/system/spawn-fcgi.service; disabled; vendor preset: disabled)
+	   Active: active (running) since Пн 2019-12-16 10:47:38 UTC; 3s ago
+	 Main PID: 4729 (php-cgi)
+	   CGroup: /system.slice/spawn-fcgi.service
+		   ├─4729 /usr/bin/php-cgi
+		   ├─4730 /usr/bin/php-cgi
+		   ├─4731 /usr/bin/php-cgi
+		   ├─4732 /usr/bin/php-cgi
+		   ├─4733 /usr/bin/php-cgi
+		   ├─4734 /usr/bin/php-cgi
+		   ├─4735 /usr/bin/php-cgi
+		   ├─4736 /usr/bin/php-cgi
+		   ├─4737 /usr/bin/php-cgi
+		   ├─4738 /usr/bin/php-cgi
+		   ├─4739 /usr/bin/php-cgi
+		   ├─4740 /usr/bin/php-cgi
+		   ├─4741 /usr/bin/php-cgi
+		   ├─4742 /usr/bin/php-cgi
+		   ├─4743 /usr/bin/php-cgi
+		   ├─4744 /usr/bin/php-cgi
+		   ├─4745 /usr/bin/php-cgi
+		   ├─4746 /usr/bin/php-cgi
+		   ├─4747 /usr/bin/php-cgi
+		   ├─4748 /usr/bin/php-cgi
+		   ├─4749 /usr/bin/php-cgi
+		   ├─4750 /usr/bin/php-cgi
+		   ├─4751 /usr/bin/php-cgi
+		   ├─4752 /usr/bin/php-cgi
+		   ├─4753 /usr/bin/php-cgi
+		   ├─4754 /usr/bin/php-cgi
+		   ├─4755 /usr/bin/php-cgi
+		   ├─4756 /usr/bin/php-cgi
+		   ├─4757 /usr/bin/php-cgi
+		   ├─4758 /usr/bin/php-cgi
+		   ├─4759 /usr/bin/php-cgi
+		   ├─4760 /usr/bin/php-cgi
+		   └─4761 /usr/bin/php-cgi
+
+	дек 16 10:47:38 localhost.localdomain systemd[1]: Started Spawn-fcgi star...
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+
 
