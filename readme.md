@@ -364,354 +364,376 @@ https://github.com/kyourselfer/OTUS_LinuxAdmin201804/tree/master/lesson6_SystemD
 	tcp    LISTEN     0      511       *:80                    *:*                   users:(("httpd",pid=4182,fd=3),("httpd",pid=4181,fd=3),("httpd",pid=4180,fd=3),("httpd",pid=4179,fd=3),("httpd",pid=4178,fd=3),("httpd",pid=4177,fd=3),("httpd",pid=4176,fd=3))
 	```
 
-# Установка Atlassian Jira
-https://linux-admins.ru/article.php?id_article=51&article_title=%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0%20Jira%20%D0%BD%D0%B0%20CentOs7
+# Установка Atlassian Jira и замена скрипта запуска на unit-файл
 
-1. Отключаем Selinux
-[vagrant@otuslinux ~]$ sudo sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
+1. Отключаем Selinux  
+		[vagrant@otuslinux ~]$ sudo sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config  
+2. Отключаем firewalld  
+		[vagrant@otuslinux ~]$ sudo systemctl stop firewalld  
+		[vagrant@otuslinux ~]$ sudo systemctl disable firewalld  
+3. Устанавливем пакет iptables-services  
+		[vagrant@otuslinux ~]$ sudo yum install -y iptables-services  
+	```
+	...
+	Installed:
+	  iptables-services.x86_64 0:1.4.21-33.el7                                                              
 
-2. Отключаем firewalld
-[vagrant@otuslinux ~]$ sudo systemctl stop firewalld
-[vagrant@otuslinux ~]$ sudo systemctl disable firewalld
+	Dependency Updated:
+	  iptables.x86_64 0:1.4.21-33.el7                                                                       
 
-3. Устанавливем пакет iptables-services
-[vagrant@otuslinux ~]$ sudo yum install -y iptables-services
-...
-Installed:
-  iptables-services.x86_64 0:1.4.21-33.el7                                                              
+	Complete!
+	```
+4. Запускаем файервол  
+		[vagrant@otuslinux ~]$ sudo systemctl start iptables  
+		[vagrant@otuslinux ~]$ sudo systemctl enable iptables  
+	```
+	Created symlink from /etc/systemd/system/basic.target.wants/iptables.service to /usr/lib/systemd/system/iptables.service.
+	```
+5. Открываем 80 порт  
+		[vagrant@otuslinux ~]$ sudo iptables -F  
+		[vagrant@otuslinux ~]$ sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT  
+		[vagrant@otuslinux ~]$ sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT  
 
-Dependency Updated:
-  iptables.x86_64 0:1.4.21-33.el7                                                                       
+6. Подключаем репозиторий epel  
+		[vagrant@otuslinux ~]$ sudo yum install -y epel-release  
+	```
+	Running transaction
+	  Installing : epel-release-7-11.noarch                                                             1/1 
+	  Verifying  : epel-release-7-11.noarch                                                             1/1 
 
-Complete!
+	Installed:
+	  epel-release.noarch 0:7-11                                                                            
 
-4.Запускаем файервол
-[vagrant@otuslinux ~]$ sudo systemctl start iptables
-[vagrant@otuslinux ~]$ sudo systemctl enable iptables
-Created symlink from /etc/systemd/system/basic.target.wants/iptables.service to /usr/lib/systemd/system/iptables.service.
+	Complete!
+	```
+7. Подключаем репозиторий postgresql  
+		[vagrant@otuslinux ~]$ sudo yum install https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-3.noarch.rpm  
+	```
+	...
+	Downloading packages:
+	Running transaction check
+	Running transaction test
+	Transaction test succeeded
+	Running transaction
+	  Installing : pgdg-redhat-repo-42.0-5.noarch                                                       1/1 
+	  Verifying  : pgdg-redhat-repo-42.0-5.noarch                                                       1/1 
 
-5. Открываем 80 порт
-[vagrant@otuslinux ~]$ sudo iptables -F
-[vagrant@otuslinux ~]$ sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-[vagrant@otuslinux ~]$ 
-[vagrant@otuslinux ~]$ sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+	Installed:
+	  pgdg-redhat-repo.noarch 0:42.0-5                                                                      
 
+	Complete!
+	```
+8. Устанавливаем postgresql  
+		[vagrant@otuslinux ~]$ sudo yum install -y postgresql95 postgresql95-server httpd wget vim git  
+	```
+	...
+	Dependencies Resolved
+	...
+	Install  6 Packages (+39 Dependent packages)
+	...
+	  perl-Time-Local.noarch 0:1.2300-2.el7                 perl-constant.noarch 0:1.27-2.el7              
+	  perl-libs.x86_64 4:5.16.3-294.el7_6                   perl-macros.x86_64 4:5.16.3-294.el7_6          
+	  perl-parent.noarch 1:0.225-244.el7                    perl-podlators.noarch 0:2.5.1-3.el7            
+	  perl-threads.x86_64 0:1.87-4.el7                      perl-threads-shared.x86_64 0:1.43-6.el7        
+	  postgresql95-libs.x86_64 0:9.5.20-2PGDG.rhel7         vim-common.x86_64 2:7.4.629-6.el7              
+	  vim-filesystem.x86_64 2:7.4.629-6.el7                
 
-6. Подключаем репозиторий epel
-[vagrant@otuslinux ~]$ sudo yum install -y epel-release
-Running transaction
-  Installing : epel-release-7-11.noarch                                                             1/1 
-  Verifying  : epel-release-7-11.noarch                                                             1/1 
+	Complete!
+	```
+9. Инициализируем базу данных postgresql  
+		[vagrant@otuslinux ~]$ sudo /usr/pgsql-9.5/bin/postgresql95-setup initdb  
+	```
+	Initializing database ... OK
+	```
 
-Installed:
-  epel-release.noarch 0:7-11                                                                            
+10. Добавляем postgresql в автозагрузку  
+		[vagrant@otuslinux ~]$ sudo systemctl enable postgresql-9.5  
+	```
+	Created symlink from /etc/systemd/system/multi-user.target.wants/postgresql-9.5.service to /usr/lib/systemd/system/postgresql-9.5.service.
+	```
 
-Complete!
+11. Запускаем демон postgresql и проверяем состояние  
+		[vagrant@otuslinux ~]$ sudo systemctl start postgresql-9.5  
+		[vagrant@otuslinux ~]$ sudo systemctl status postgresql-9.5  
+	```
+	● postgresql-9.5.service - PostgreSQL 9.5 database server
+	   Loaded: loaded (/usr/lib/systemd/system/postgresql-9.5.service; enabled; vendor preset: disabled)
+	   Active: active (running) since Tue 2019-12-17 09:16:01 UTC; 12s ago
+	     Docs: https://www.postgresql.org/docs/9.5/static/
+	  Process: 6115 ExecStart=/usr/pgsql-9.5/bin/pg_ctl start -D ${PGDATA} -s -w -t 300 (code=exited, status=0/SUCCESS)
+	  Process: 6110 ExecStartPre=/usr/pgsql-9.5/bin/postgresql95-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+	 Main PID: 6118 (postgres)
+	   CGroup: /system.slice/postgresql-9.5.service
+		   ├─6118 /usr/pgsql-9.5/bin/postgres -D /var/lib/pgsql/9.5/data
+		   ├─6119 postgres: logger process   
+		   ├─6121 postgres: checkpointer process   
+		   ├─6122 postgres: writer process   
+		   ├─6123 postgres: wal writer process   
+		   ├─6124 postgres: autovacuum launcher process   
+		   └─6125 postgres: stats collector process   
 
-7. Подключаем репозиторий postgresql
-[vagrant@otuslinux ~]$ sudo yum install https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-3.noarch.rpm
-...
-Downloading packages:
-Running transaction check
-Running transaction test
-Transaction test succeeded
-Running transaction
-  Installing : pgdg-redhat-repo-42.0-5.noarch                                                       1/1 
-  Verifying  : pgdg-redhat-repo-42.0-5.noarch                                                       1/1 
+	Dec 17 09:16:00 otuslinux systemd[1]: Starting PostgreSQL 9.5 database server...
+	Dec 17 09:16:00 otuslinux pg_ctl[6115]: < 2019-12-17 09:16:00.550 UTC >LOG:  redirecting log outp...cess
+	Dec 17 09:16:00 otuslinux pg_ctl[6115]: < 2019-12-17 09:16:00.550 UTC >HINT:  Future log output w...og".
+	Dec 17 09:16:01 otuslinux systemd[1]: Started PostgreSQL 9.5 database server.
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+12. Создадим пользователя atlassian. Для манипуляций с базой данных логинимся под пользователем postgres  
+		[vagrant@otuslinux ~]$ sudo su - postgres  
+	```
+	Last login: Tue Dec 17 09:16:33 UTC 2019 on pts/0
+	```
+		-bash-4.2$ createuser -S -d -r -P -E atlassian  
+		-S - не суперпользователь;  
+		-d - роль позволяющая создавать базы;  
+		-r - роль позволяющая создавать новые роли;  
+		-P - назначение пароля новому пользвателю;  
+		-E - хранить пароль пользователя в зашифрованном виде;  
+	```
+	Enter password for new role: 
+	Enter it again: 
+	```
+13. Создаем базу данных jira  
+		-bash-4.2$ createdb --owner atlassian --encoding utf8 jira  
+		--owner - владелец базы данных;  
+		--encoding - кодировка базы  
 
-Installed:
-  pgdg-redhat-repo.noarch 0:42.0-5                                                                      
+14. Выходим из под пользователя postgres  
+		-bash-4.2$ exit  
+	```
+	logout
+	```
+15. Изменим настройки доступа к базам данных postgresql. Настройки хранятся в файле /var/lib/pgsql/9.5/data/pg_hba.conf  
+		[vagrant@otuslinux ~]$ sudo vi /var/lib/pgsql/9.5/data/pg_hba.conf   
+	```
+	host    all             postgres        127.0.0.1/32       ident
+	host    all             all             127.0.0.1/32       md5
+	```
+16. Перезапускаем демона postgresql  
+		[vagrant@otuslinux ~]$ sudo systemctl restart postgresql-9.5  
+		[vagrant@otuslinux ~]$ sudo systemctl status postgresql-9.5  
+	```
+	● postgresql-9.5.service - PostgreSQL 9.5 database server
+	   Loaded: loaded (/usr/lib/systemd/system/postgresql-9.5.service; enabled; vendor preset: disabled)
+	   Active: active (running) since Tue 2019-12-17 09:25:54 UTC; 13s ago
+	     Docs: https://www.postgresql.org/docs/9.5/static/
+	  Process: 6235 ExecStop=/usr/pgsql-9.5/bin/pg_ctl stop -D ${PGDATA} -s -m fast (code=exited, status=0/SUCCESS)
+	  Process: 6241 ExecStart=/usr/pgsql-9.5/bin/pg_ctl start -D ${PGDATA} -s -w -t 300 (code=exited, status=0/SUCCESS)
+	  Process: 6236 ExecStartPre=/usr/pgsql-9.5/bin/postgresql95-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
+	 Main PID: 6244 (postgres)
+	   CGroup: /system.slice/postgresql-9.5.service
+		   ├─6244 /usr/pgsql-9.5/bin/postgres -D /var/lib/pgsql/9.5/data
+		   ├─6245 postgres: logger process   
+		   ├─6247 postgres: checkpointer process   
+		   ├─6248 postgres: writer process   
+		   ├─6249 postgres: wal writer process   
+		   ├─6250 postgres: autovacuum launcher process   
+		   └─6251 postgres: stats collector process   
 
-Complete!
+	Dec 17 09:25:53 otuslinux systemd[1]: Stopped PostgreSQL 9.5 database server.
+	Dec 17 09:25:53 otuslinux systemd[1]: Starting PostgreSQL 9.5 database server...
+	Dec 17 09:25:53 otuslinux pg_ctl[6241]: < 2019-12-17 09:25:53.846 UTC >LOG:  redirecting log outp...cess
+	Dec 17 09:25:53 otuslinux pg_ctl[6241]: < 2019-12-17 09:25:53.846 UTC >HINT:  Future log output w...og".
+	Dec 17 09:25:54 otuslinux systemd[1]: Started PostgreSQL 9.5 database server.
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+17. Установим Jira. Создаем временную папку для скачивания инсталлятора  
+		[vagrant@otuslinux ~]$ sudo mkdir -p /software/jira  
+		[vagrant@otuslinux ~]$ cd /software/jira  
 
-8. Устанавливаем
-[vagrant@otuslinux ~]$ sudo yum install -y postgresql95 postgresql95-server httpd wget vim git
-...
-Dependencies Resolved
-...
-Install  6 Packages (+39 Dependent packages)
-...
-  perl-Time-Local.noarch 0:1.2300-2.el7                 perl-constant.noarch 0:1.27-2.el7              
-  perl-libs.x86_64 4:5.16.3-294.el7_6                   perl-macros.x86_64 4:5.16.3-294.el7_6          
-  perl-parent.noarch 1:0.225-244.el7                    perl-podlators.noarch 0:2.5.1-3.el7            
-  perl-threads.x86_64 0:1.87-4.el7                      perl-threads-shared.x86_64 0:1.43-6.el7        
-  postgresql95-libs.x86_64 0:9.5.20-2PGDG.rhel7         vim-common.x86_64 2:7.4.629-6.el7              
-  vim-filesystem.x86_64 2:7.4.629-6.el7                
+18. Скачиваем Jira installer  
+		[vagrant@otuslinux jira]$ sudo wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-software-7.5.0-x64.bin  
+	```
+	...
+	Length: 346526522 (330M) [application/octet-stream]
+	Saving to: 'atlassian-jira-software-7.5.0-x64.bin'
 
-Complete!
+	100%[==============================================================>] 346,526,522  618KB/s   in 9m 43s 
 
-9. Инициализируем базу данных postgresql
-[vagrant@otuslinux ~]$ sudo /usr/pgsql-9.5/bin/postgresql95-setup initdb
-Initializing database ... OK
+	2019-12-17 09:37:08 (580 KB/s) - 'atlassian-jira-software-7.5.0-x64.bin' saved [346526522/346526522]
+	```
+19. Делаем его доступным на исполнение и запускаем  
+		[vagrant@otuslinux jira]$ sudo chmod +x atlassian-jira-software-7.5.0-x64.bin  
+		[vagrant@otuslinux jira]$ sudo ./atlassian-jira-software-7.5.0-x64.bin  
+	```
+	Unpacking JRE ...
+	Starting Installer ...
+	Dec 17, 2019 9:39:31 AM java.util.prefs.FileSystemPreferences$1 run
+	INFO: Created user preferences directory.
+	Dec 17, 2019 9:39:31 AM java.util.prefs.FileSystemPreferences$2 run
+	INFO: Created system preferences directory in java.home.
 
-10. Добавляем postgresql в автозагрузку:
-[vagrant@otuslinux ~]$ sudo systemctl enable postgresql-9.5
-Created symlink from /etc/systemd/system/multi-user.target.wants/postgresql-9.5.service to /usr/lib/systemd/system/postgresql-9.5.service.
+	This will install JIRA Software 7.5.0 on your computer.
+	OK [o, Enter], Cancel [c]
+	o
+	Choose the appropriate installation or upgrade option.
+	Please choose one of the following:
+	Express Install (use default settings) [1], Custom Install (recommended for advanced users) [2, Enter], Upgrade an existing JIRA installation [3]
+	1
+	Details on where JIRA Software will be installed and the settings that will be used.
+	Installation Directory: /opt/atlassian/jira 
+	Home Directory: /var/atlassian/application-data/jira 
+	HTTP Port: 8080 
+	RMI Port: 8005 
+	Install as service: Yes 
+	Install [i, Enter], Exit [e]
+	i
 
-11. Запускаем демон postgresql и проверяем состояние
-[vagrant@otuslinux ~]$ sudo systemctl start postgresql-9.5
-[vagrant@otuslinux ~]$ sudo systemctl status postgresql-9.5
-● postgresql-9.5.service - PostgreSQL 9.5 database server
-   Loaded: loaded (/usr/lib/systemd/system/postgresql-9.5.service; enabled; vendor preset: disabled)
-   Active: active (running) since Tue 2019-12-17 09:16:01 UTC; 12s ago
-     Docs: https://www.postgresql.org/docs/9.5/static/
-  Process: 6115 ExecStart=/usr/pgsql-9.5/bin/pg_ctl start -D ${PGDATA} -s -w -t 300 (code=exited, status=0/SUCCESS)
-  Process: 6110 ExecStartPre=/usr/pgsql-9.5/bin/postgresql95-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
- Main PID: 6118 (postgres)
-   CGroup: /system.slice/postgresql-9.5.service
-           ├─6118 /usr/pgsql-9.5/bin/postgres -D /var/lib/pgsql/9.5/data
-           ├─6119 postgres: logger process   
-           ├─6121 postgres: checkpointer process   
-           ├─6122 postgres: writer process   
-           ├─6123 postgres: wal writer process   
-           ├─6124 postgres: autovacuum launcher process   
-           └─6125 postgres: stats collector process   
+	Extracting files ...
 
-Dec 17 09:16:00 otuslinux systemd[1]: Starting PostgreSQL 9.5 database server...
-Dec 17 09:16:00 otuslinux pg_ctl[6115]: < 2019-12-17 09:16:00.550 UTC >LOG:  redirecting log outp...cess
-Dec 17 09:16:00 otuslinux pg_ctl[6115]: < 2019-12-17 09:16:00.550 UTC >HINT:  Future log output w...og".
-Dec 17 09:16:01 otuslinux systemd[1]: Started PostgreSQL 9.5 database server.
-Hint: Some lines were ellipsized, use -l to show in full.
+	Please wait a few moments while JIRA Software is configured.
+	Installation of JIRA Software 7.5.0 is complete
+	Start JIRA Software 7.5.0 now?
+	Yes [y, Enter], No [n]
+	y
 
-12. Создадим базу данных jira и пользователя atlassian. Для манипуляций с баззой данных логинемся под пользователем postgres
-		[vagrant@otuslinux ~]$ sudo su - postgres
-Last login: Tue Dec 17 09:16:33 UTC 2019 on pts/0
-		-bash-4.2$ createuser -S -d -r -P -E atlassian
-		-S - не суперпользователь;
-		-d - роль позволяющая создавать базы;
-		-r - роль позволяющая создавать новые роли;
-		-P - назначение пароля новому пользвателю;
-		-E - хранить пароль пользователя в зашифрованном виде;
-Enter password for new role: 
-Enter it again: 
+	Please wait a few moments while JIRA Software starts up.
+	Launching JIRA Software ...
+	Installation of JIRA Software 7.5.0 is complete
+	Your installation of JIRA Software 7.5.0 is now ready and can be accessed
+	via your browser.
+	JIRA Software 7.5.0 can be accessed at http://localhost:8080
+	Finishing installation ...
+	```
+20. Создаем файл виртуального хоста /etc/httpd/conf.d/vhost.conf и записываем в него параметры  
+		[vagrant@otuslinux jira]$ sudo touch /etc/httpd/conf.d/vhost.conf  
+		[vagrant@otuslinux jira]$ sudo vi /etc/httpd/conf.d/vhost.conf  
+		[vagrant@otuslinux jira]$ sudo  cat /etc/httpd/conf.d/vhost.conf  
+	```
+	<VirtualHost *:80>
+	     ServerAdmin support@example.com
+	     ServerName confluence.example.com
+	     RewriteEngine On
+	     RewriteRule / http://%{HTTP_HOST}:8080
+	</VirtualHost>
+	```
+21. Проверяем, правильно ли мы все сделали  
+		[vagrant@otuslinux jira]$ httpd -t  
+	```
+	AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1. Set the 'ServerName' directive globally to suppress this message
+	Syntax OK
+	```
+22. Запускаем демон httpd и проверяем статус  
+		[vagrant@otuslinux jira]$ sudo systemctl start httpd  
+		[vagrant@otuslinux jira]$ sudo systemctl status httpd  
+	```
+	● httpd.service - The Apache HTTP Server
+	   Loaded: loaded (/usr/lib/systemd/system/httpd.service; disabled; vendor preset: disabled)
+	   Active: active (running) since Tue 2019-12-17 09:45:02 UTC; 2s ago
+	     Docs: man:httpd(8)
+		   man:apachectl(8)
+	 Main PID: 10790 (httpd)
+	   Status: "Processing requests..."
+	   CGroup: /system.slice/httpd.service
+		   ├─10790 /usr/sbin/httpd -DFOREGROUND
+		   ├─10791 /usr/sbin/httpd -DFOREGROUND
+		   ├─10792 /usr/sbin/httpd -DFOREGROUND
+		   ├─10793 /usr/sbin/httpd -DFOREGROUND
+		   ├─10794 /usr/sbin/httpd -DFOREGROUND
+		   └─10795 /usr/sbin/httpd -DFOREGROUND
 
-13. Создаем базу данных jira
-		-bash-4.2$ createdb --owner atlassian --encoding utf8 jira
-		--owner - владелец базы данных;
-		--encoding - кодировка базы
-14. Выходим из под пользователя postgres
-		-bash-4.2$ exit
-logout
+	Dec 17 09:45:02 otuslinux systemd[1]: Starting The Apache HTTP Server...
+	Dec 17 09:45:02 otuslinux httpd[10790]: AH00558: httpd: Could not reliably determine the server's...sage
+	Dec 17 09:45:02 otuslinux systemd[1]: Started The Apache HTTP Server.
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+23. Узнаем свой ip-адрес для подключения к jira с хостовой машины  
+		[vagrant@otuslinux jira]$  ip addr show  
+	```
+	1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+	    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+	    inet 127.0.0.1/8 scope host lo
+	       valid_lft forever preferred_lft forever
+	    inet6 ::1/128 scope host 
+	       valid_lft forever preferred_lft forever
+	2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+	    link/ether 52:54:00:8a:fe:e6 brd ff:ff:ff:ff:ff:ff
+	    inet 10.0.2.15/24 brd 10.0.2.255 scope global noprefixroute dynamic eth0
+	       valid_lft 83137sec preferred_lft 83137sec
+	    inet6 fe80::5054:ff:fe8a:fee6/64 scope link 
+	       valid_lft forever preferred_lft forever
+	3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+	    link/ether 08:00:27:cb:50:cf brd ff:ff:ff:ff:ff:ff
+	    inet 192.168.11.101/24 brd 192.168.11.255 scope global noprefixroute eth1
+	       valid_lft forever preferred_lft forever
+	    inet6 fe80::a00:27ff:fecb:50cf/64 scope link 
+	       valid_lft forever preferred_lft forever
+	```
+24. Подключаемся браузером к адресу 192.168.11.101, видим страницу настройки jira  
+![firstpage](Jira.png "Страница настройки jira")
 
-15. Выпольним настройки доступа к базам данных postgresql. Настройки хранятся в файле /var/lib/pgsql/9.5/data/pg_hba.conf
-host    all             postgres             127.0.0.1/32            ident
-host    all             all             127.0.0.1/32            md5
-[vagrant@otuslinux ~]$ sudo vi /var/lib/pgsql/9.5/data/pg_hba.conf 
+25. Создаем юнит-файл для сервиса jira и заполняем его необходимыми данными  
+		[vagrant@otuslinux ~]$  sudo  touch /etc/systemd/system/jira.service  
+		[vagrant@otuslinux ~]$  sudo  vi /etc/systemd/system/jira.service  
+		[vagrant@otuslinux ~]$  sudo  cat /etc/systemd/system/jira.service  
+	```
+	[Unit]
+	Description=JIRA Service
+	After=network.target syslog.target
+	 
+	[Service]
+	Type=forking
+	User=jira
 
-16. Перезапускаем демона postgresql
-		[vagrant@otuslinux ~]$ sudo systemctl restart postgresql-9.5
-		[vagrant@otuslinux ~]$ sudo systemctl status postgresql-9.5
-● postgresql-9.5.service - PostgreSQL 9.5 database server
-   Loaded: loaded (/usr/lib/systemd/system/postgresql-9.5.service; enabled; vendor preset: disabled)
-   Active: active (running) since Tue 2019-12-17 09:25:54 UTC; 13s ago
-     Docs: https://www.postgresql.org/docs/9.5/static/
-  Process: 6235 ExecStop=/usr/pgsql-9.5/bin/pg_ctl stop -D ${PGDATA} -s -m fast (code=exited, status=0/SUCCESS)
-  Process: 6241 ExecStart=/usr/pgsql-9.5/bin/pg_ctl start -D ${PGDATA} -s -w -t 300 (code=exited, status=0/SUCCESS)
-  Process: 6236 ExecStartPre=/usr/pgsql-9.5/bin/postgresql95-check-db-dir ${PGDATA} (code=exited, status=0/SUCCESS)
- Main PID: 6244 (postgres)
-   CGroup: /system.slice/postgresql-9.5.service
-           ├─6244 /usr/pgsql-9.5/bin/postgres -D /var/lib/pgsql/9.5/data
-           ├─6245 postgres: logger process   
-           ├─6247 postgres: checkpointer process   
-           ├─6248 postgres: writer process   
-           ├─6249 postgres: wal writer process   
-           ├─6250 postgres: autovacuum launcher process   
-           └─6251 postgres: stats collector process   
+	ExecStart=/opt/atlassian/jira/bin/start-jira.sh
+	ExecStop=/opt/atlassian/jira/bin/stop-jira.sh
 
-Dec 17 09:25:53 otuslinux systemd[1]: Stopped PostgreSQL 9.5 database server.
-Dec 17 09:25:53 otuslinux systemd[1]: Starting PostgreSQL 9.5 database server...
-Dec 17 09:25:53 otuslinux pg_ctl[6241]: < 2019-12-17 09:25:53.846 UTC >LOG:  redirecting log outp...cess
-Dec 17 09:25:53 otuslinux pg_ctl[6241]: < 2019-12-17 09:25:53.846 UTC >HINT:  Future log output w...og".
-Dec 17 09:25:54 otuslinux systemd[1]: Started PostgreSQL 9.5 database server.
-Hint: Some lines were ellipsized, use -l to show in full.
+	[Install]
+	WantedBy=multi-user.target
+	```
+26. Останавливаем сервис jira и смотроим статус. Замечаем, что запуск производился с помощью /etc/rc.d/init.d/jira  
+		[vagrant@otuslinux ~]$ sudo systemctl stop jira  
+		[vagrant@otuslinux ~]$ sudo systemctl status jira  
+	```
+	● jira.service - (null)
+	   Loaded: loaded (/etc/rc.d/init.d/jira; disabled; vendor preset: disabled)
+	   Active: inactive (dead) since Tue 2019-12-17 10:30:11 UTC; 6s ago
+	     Docs: man:systemd-sysv-generator(8)
+	  Process: 3053 ExecStop=/etc/rc.d/init.d/jira stop (code=exited, status=0/SUCCESS)
 
-17. Установим Jira. Создаем временную папку и скачиваем туда Bitcbucket installer
-[vagrant@otuslinux ~]$ sudo mkdir -p /software/jira
-[vagrant@otuslinux ~]$ cd /software/jira
+	Dec 17 10:30:10 otuslinux jira[3053]: .IMMMM..NMMMMMD.
+	Dec 17 10:30:10 otuslinux jira[3053]: .8MMMMM:  :NMMMMN.
+	Dec 17 10:30:10 otuslinux jira[3053]: .MMMMMM.   .MMMMM~.
+	Dec 17 10:30:10 otuslinux jira[3053]: .MMMMMN    .MMMMM?.
+	Dec 17 10:30:10 otuslinux jira[3053]: Atlassian JIRA
+	Dec 17 10:30:10 otuslinux jira[3053]: Version : 7.5.0
+	Dec 17 10:30:10 otuslinux jira[3053]: If you encounter issues starting or stopping JIRA, please s...uide
+	Dec 17 10:30:10 otuslinux jira[3053]: Server startup logs are located in /opt/atlassian/jira/logs....out
+	Dec 17 10:30:11 otuslinux jira[3053]: Tomcat stopped.
+	Dec 17 10:30:11 otuslinux systemd[1]: Stopped (null).
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+27. Делаем релоад systemd  
+		[vagrant@otuslinux ~]$ sudo systemctl daemon-reload  
 
+28. Создаем загрузку для сервиса jira  
+		[vagrant@otuslinux ~]$ sudo systemctl enable jira  
+	```
+	Created symlink from /etc/systemd/system/multi-user.target.wants/jira.service to /etc/systemd/system/jira.service.
+	```
+29. Запускаем jira и проверяем статус  
+		[vagrant@otuslinux ~]$ sudo systemctl start jira  
+		[vagrant@otuslinux ~]$ sudo systemctl status jira  
+	```
+	● jira.service - JIRA Service
+	   Loaded: loaded (/etc/systemd/system/jira.service; enabled; vendor preset: disabled)
+	   Active: active (running) since Tue 2019-12-17 10:31:29 UTC; 3s ago
+	  Process: 3156 ExecStart=/opt/atlassian/jira/bin/start-jira.sh (code=exited, status=0/SUCCESS)
+	 Main PID: 3184 (java)
+	   CGroup: /system.slice/jira.service
+		   └─3184 /opt/atlassian/jira/jre//bin/java -Djava.util.logging.config.file=/opt/atlassian/ji...
 
-18. Скачиваем Jira installer
-[vagrant@otuslinux jira]$ sudo wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-software-7.5.0-x64.bin
-...
-Length: 346526522 (330M) [application/octet-stream]
-Saving to: 'atlassian-jira-software-7.5.0-x64.bin'
-
-100%[==============================================================>] 346,526,522  618KB/s   in 9m 43s 
-
-2019-12-17 09:37:08 (580 KB/s) - 'atlassian-jira-software-7.5.0-x64.bin' saved [346526522/346526522]
-
-19. Делаем его доступным на исполнение и запускаем
-[vagrant@otuslinux jira]$ sudo chmod +x atlassian-jira-software-7.5.0-x64.bin
-[vagrant@otuslinux jira]$ sudo ./atlassian-jira-software-7.5.0-x64.bin
-Unpacking JRE ...
-Starting Installer ...
-Dec 17, 2019 9:39:31 AM java.util.prefs.FileSystemPreferences$1 run
-INFO: Created user preferences directory.
-Dec 17, 2019 9:39:31 AM java.util.prefs.FileSystemPreferences$2 run
-INFO: Created system preferences directory in java.home.
-
-This will install JIRA Software 7.5.0 on your computer.
-OK [o, Enter], Cancel [c]
-o
-Choose the appropriate installation or upgrade option.
-Please choose one of the following:
-Express Install (use default settings) [1], Custom Install (recommended for advanced users) [2, Enter], Upgrade an existing JIRA installation [3]
-1
-Details on where JIRA Software will be installed and the settings that will be used.
-Installation Directory: /opt/atlassian/jira 
-Home Directory: /var/atlassian/application-data/jira 
-HTTP Port: 8080 
-RMI Port: 8005 
-Install as service: Yes 
-Install [i, Enter], Exit [e]
-i
-
-Extracting files ...
-
-Please wait a few moments while JIRA Software is configured.
-Installation of JIRA Software 7.5.0 is complete
-Start JIRA Software 7.5.0 now?
-Yes [y, Enter], No [n]
-y
-
-Please wait a few moments while JIRA Software starts up.
-Launching JIRA Software ...
-Installation of JIRA Software 7.5.0 is complete
-Your installation of JIRA Software 7.5.0 is now ready and can be accessed
-via your browser.
-JIRA Software 7.5.0 can be accessed at http://localhost:8080
-Finishing installation ...
-
-20. Создаем файл виртуального хоста /etc/httpd/conf.d/vhost.conf и записаваем в него параметры
-[vagrant@otuslinux jira]$ sudo touch /etc/httpd/conf.d/vhost.conf
-[vagrant@otuslinux jira]$ sudo vi /etc/httpd/conf.d/vhost.conf
-[vagrant@otuslinux jira]$ sudo  cat /etc/httpd/conf.d/vhost.conf
-<VirtualHost *:80>
-     ServerAdmin support@example.com
-     ServerName confluence.example.com
-     RewriteEngine On
-     RewriteRule / http://%{HTTP_HOST}:8080
-</VirtualHost>
-
-21. Проверяем правильно ли мы все сдеали
-[vagrant@otuslinux jira]$ httpd -t
-AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1. Set the 'ServerName' directive globally to suppress this message
-Syntax OK
-
-22. Запускаем демон httpd и проверяем статус
-[vagrant@otuslinux jira]$ sudo systemctl start httpd
-[vagrant@otuslinux jira]$ sudo systemctl status httpd
-● httpd.service - The Apache HTTP Server
-   Loaded: loaded (/usr/lib/systemd/system/httpd.service; disabled; vendor preset: disabled)
-   Active: active (running) since Tue 2019-12-17 09:45:02 UTC; 2s ago
-     Docs: man:httpd(8)
-           man:apachectl(8)
- Main PID: 10790 (httpd)
-   Status: "Processing requests..."
-   CGroup: /system.slice/httpd.service
-           ├─10790 /usr/sbin/httpd -DFOREGROUND
-           ├─10791 /usr/sbin/httpd -DFOREGROUND
-           ├─10792 /usr/sbin/httpd -DFOREGROUND
-           ├─10793 /usr/sbin/httpd -DFOREGROUND
-           ├─10794 /usr/sbin/httpd -DFOREGROUND
-           └─10795 /usr/sbin/httpd -DFOREGROUND
-
-Dec 17 09:45:02 otuslinux systemd[1]: Starting The Apache HTTP Server...
-Dec 17 09:45:02 otuslinux httpd[10790]: AH00558: httpd: Could not reliably determine the server's...sage
-Dec 17 09:45:02 otuslinux systemd[1]: Started The Apache HTTP Server.
-Hint: Some lines were ellipsized, use -l to show in full.
-
-23. Узнаем свой ip-адрес для подключения к jira с хостовой машины
-[vagrant@otuslinux jira]$  ip addr show
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host 
-       valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-    link/ether 52:54:00:8a:fe:e6 brd ff:ff:ff:ff:ff:ff
-    inet 10.0.2.15/24 brd 10.0.2.255 scope global noprefixroute dynamic eth0
-       valid_lft 83137sec preferred_lft 83137sec
-    inet6 fe80::5054:ff:fe8a:fee6/64 scope link 
-       valid_lft forever preferred_lft forever
-3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-    link/ether 08:00:27:cb:50:cf brd ff:ff:ff:ff:ff:ff
-    inet 192.168.11.101/24 brd 192.168.11.255 scope global noprefixroute eth1
-       valid_lft forever preferred_lft forever
-    inet6 fe80::a00:27ff:fecb:50cf/64 scope link 
-       valid_lft forever preferred_lft forever
-
-24. Подключаемся браузером к адресу 192.168.11.101, видим страницу настройки jira
-
-25. Создаем юнит-файл для сервиса jira и заполняем его необходимыми данными 
-[vagrant@otuslinux ~]$  sudo  touch /etc/systemd/system/jira.service
-[vagrant@otuslinux ~]$  sudo  vi /etc/systemd/system/jira.service
-[vagrant@otuslinux ~]$  sudo  cat /etc/systemd/system/jira.service
-[Unit]
-Description=JIRA Service
-After=network.target syslog.target
- 
-[Service]
-Type=forking
-User=jira
-
-ExecStart=/opt/atlassian/jira/bin/start-jira.sh
-ExecStop=/opt/atlassian/jira/bin/stop-jira.sh
-
-[Install]
-WantedBy=multi-user.target
-
-26. Останавливаем сервис jira и смотроим статус. Замечаем, что запуск происзводился с помощью /etc/rc.d/init.d/jira
-[vagrant@otuslinux ~]$ sudo systemctl stop jira
-[vagrant@otuslinux ~]$ sudo systemctl status jira
-● jira.service - (null)
-   Loaded: loaded (/etc/rc.d/init.d/jira; disabled; vendor preset: disabled)
-   Active: inactive (dead) since Tue 2019-12-17 10:30:11 UTC; 6s ago
-     Docs: man:systemd-sysv-generator(8)
-  Process: 3053 ExecStop=/etc/rc.d/init.d/jira stop (code=exited, status=0/SUCCESS)
-
-Dec 17 10:30:10 otuslinux jira[3053]: .IMMMM..NMMMMMD.
-Dec 17 10:30:10 otuslinux jira[3053]: .8MMMMM:  :NMMMMN.
-Dec 17 10:30:10 otuslinux jira[3053]: .MMMMMM.   .MMMMM~.
-Dec 17 10:30:10 otuslinux jira[3053]: .MMMMMN    .MMMMM?.
-Dec 17 10:30:10 otuslinux jira[3053]: Atlassian JIRA
-Dec 17 10:30:10 otuslinux jira[3053]: Version : 7.5.0
-Dec 17 10:30:10 otuslinux jira[3053]: If you encounter issues starting or stopping JIRA, please s...uide
-Dec 17 10:30:10 otuslinux jira[3053]: Server startup logs are located in /opt/atlassian/jira/logs....out
-Dec 17 10:30:11 otuslinux jira[3053]: Tomcat stopped.
-Dec 17 10:30:11 otuslinux systemd[1]: Stopped (null).
-Hint: Some lines were ellipsized, use -l to show in full.
-
-27. 
-[vagrant@otuslinux ~]$ sudo systemctl daemon-reload
-
-28. 
-[vagrant@otuslinux ~]$ sudo systemctl enable jira
-Created symlink from /etc/systemd/system/multi-user.target.wants/jira.service to /etc/systemd/system/jira.service.
-
-29. 
-[vagrant@otuslinux ~]$ sudo systemctl start jira
-[vagrant@otuslinux ~]$ sudo systemctl status jira
-● jira.service - JIRA Service
-   Loaded: loaded (/etc/systemd/system/jira.service; enabled; vendor preset: disabled)
-   Active: active (running) since Tue 2019-12-17 10:31:29 UTC; 3s ago
-  Process: 3156 ExecStart=/opt/atlassian/jira/bin/start-jira.sh (code=exited, status=0/SUCCESS)
- Main PID: 3184 (java)
-   CGroup: /system.slice/jira.service
-           └─3184 /opt/atlassian/jira/jre//bin/java -Djava.util.logging.config.file=/opt/atlassian/ji...
-
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .:,.$MMMMMMM
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .IMMMM..NMMMMMD.
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .8MMMMM:  :NMMMMN.
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .MMMMMM.   .MMMMM~.
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .MMMMMN    .MMMMM?.
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Atlassian JIRA
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Version : 7.5.0
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: If you encounter issues starting or stopping JIRA, ...ide
-Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Server startup logs are located in /opt/atlassian/j...out
-Dec 17 10:31:29 otuslinux systemd[1]: Started JIRA Service.
-Hint: Some lines were ellipsized, use -l to show in full.
-
-30. Подключаемся браузером к адресу 192.168.11.101, видим страницу настройки jira
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .:,.$MMMMMMM
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .IMMMM..NMMMMMD.
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .8MMMMM:  :NMMMMN.
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .MMMMMM.   .MMMMM~.
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: .MMMMMN    .MMMMM?.
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Atlassian JIRA
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Version : 7.5.0
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: If you encounter issues starting or stopping JIRA, ...ide
+	Dec 17 10:31:29 otuslinux start-jira.sh[3156]: Server startup logs are located in /opt/atlassian/j...out
+	Dec 17 10:31:29 otuslinux systemd[1]: Started JIRA Service.
+	Hint: Some lines were ellipsized, use -l to show in full.
+	```
+30. Подключаемся браузером к адресу 192.168.11.101, видим страницу настройки jira  
 
