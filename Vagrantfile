@@ -25,9 +25,10 @@ Vagrant.configure("2") do |config|
             vb.customize ["modifyvm", :id, "--memory", "1024"]
           end
 
-          box.vm.provision :shell do |s|
-             s.inline = 'mkdir -p ~root/.ssh; cp ~vagrant/.ssh/auth* ~root/.ssh'
-          end
+	  config.vm.provision "shell", path: "scripts/main.sh"
+          #box.vm.provision :shell do |s|
+          #   s.inline = 'mkdir -p ~root/.ssh; cp ~vagrant/.ssh/auth* ~root/.ssh'
+          #end
 
       end
   end

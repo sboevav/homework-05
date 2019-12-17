@@ -214,9 +214,6 @@
 	```
 
 # Реализуем возможность запуска нескольких инстансов сервера с разными конфигами 
-http://automation-remarks.com/setting-vagrant/
-https://github.com/kyourselfer/OTUS_LinuxAdmin201804/tree/master/lesson6_SystemD/SCRIPTS/apache_multipleConf
-
 
 1. Копируем юнит-файл /usr/lib/systemd/system/httpd.service в каталог /etc/systemd/system/ c изменением имени на httpd@.service  
 		[root@localhost vagrant]# cp /usr/lib/systemd/system/httpd.service /etc/systemd/system/httpd@.service  
